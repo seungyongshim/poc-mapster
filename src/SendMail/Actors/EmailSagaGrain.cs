@@ -1,10 +1,22 @@
+using Mapster;
+using Ports.Smtp.Actors;
 using Proto;
 using WebApplication1.Domains;
 
-namespace WebApplication1.Actors;
+namespace SendMailService.Actors;
 
 public class EmailSagaGrain : IActor
 {
+    public Task ReceiveAsync(IContext context) => context.Message switch
+    {
+        SendMail msg => Task.Run(async () =>
+        {
+            var ret = await context.RequestAsync<SmtpPortActor.SendMailResult>(ActorPath.SmtpPortActorPid, msg.Adapt<SmtpPortActor.SendMail>());
+            context.Respond(ret.Adapt<SendMailResult>());
+        }),
+        _ => Task.CompletedTask
+    };
+
     public record SendMail
     (
         IEnumerable<Email> To,
@@ -16,11 +28,4 @@ public class EmailSagaGrain : IActor
     public record SendMailResult
     (
     );
-
-    public Task ReceiveAsync(IContext context)
-    {
-        
-
-        return Task.CompletedTask;
-    }
 }

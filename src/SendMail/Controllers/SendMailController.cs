@@ -1,10 +1,11 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Proto.Cluster;
-using WebApplication1.Actors;
+using SendMailService.Actors;
 using WebApplication1.Domains;
-using static WebApplication1.Actors.EmailSagaGrain;
+using static SendMailService.Actors.EmailSagaGrain;
 
-namespace WebApplication1.Controllers;
+namespace SendMailService.Controllers;
 
 
 
@@ -12,14 +13,11 @@ namespace WebApplication1.Controllers;
 [Route("[controller]")]
 public class SendMailController : ControllerBase
 {
-    
-
     [HttpPost]
-    public async Task<IActionResult> PostAsync([FromBody]Dto dto, [FromServices]Cluster cluster, CancellationToken ct)
+    public async Task<IActionResult> PostAsync([FromBody] Dto dto, [FromServices] Cluster cluster, CancellationToken ct)
     {
-        var target = dto.ToSendMail();
-
-        var ret = await cluster.RequestAsync<SendMailResult>("1", nameof(EmailSagaGrain), target, ct);
+        var cid = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        var ret = await cluster.RequestAsync<SendMailResult>(ActorPath.EmailSagaGrain(cid), dto.ToSendMail(), ct);
 
         return Ok(ret);
     }
