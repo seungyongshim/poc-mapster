@@ -1,16 +1,12 @@
-using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using Proto.Cluster;
+using WebApplication1.Actors;
 using WebApplication1.Domains;
+using static WebApplication1.Actors.EmailSagaGrain;
 
 namespace WebApplication1.Controllers;
 
-public record RequestSendMailActor
-(
-    IEnumerable<Email> To,
-    Email From,
-    IEnumerable<Email> Cc,
-    IEnumerable<Email> Bcc
-);
+
 
 [ApiController]
 [Route("[controller]")]
@@ -19,18 +15,13 @@ public class SendMailController : ControllerBase
     
 
     [HttpPost]
-    public async Task<IActionResult> PostAsync(Dto dto)
+    public async Task<IActionResult> PostAsync([FromBody]Dto dto, [FromServices]Cluster cluster, CancellationToken ct)
     {
-        var target = dto.ToRequestSendMailActor();
-        await Task.CompletedTask;
-        return Ok(new
-        {
-            To = target.To.Select(x => new
-            {
-                Name = x.Name.Value,
-                Address = x.EmailAddress.Value
-            })
-        });
+        var target = dto.ToSendMail();
+
+        var ret = await cluster.RequestAsync<SendMailResult>("1", nameof(EmailSagaGrain), target, ct);
+
+        return Ok(ret);
     }
 
     public record Dto
@@ -45,7 +36,7 @@ public class SendMailController : ControllerBase
             public Email ToEmail() => new(new(Name), new(EmailAddress));
         };
 
-        public RequestSendMailActor ToRequestSendMailActor() => new
+        public SendMail ToSendMail() => new
         (
             To.Select(_ => _.ToEmail()),
             From.ToEmail(),
