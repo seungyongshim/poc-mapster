@@ -19,3 +19,6 @@
 ## 분산 추적
 ![image](https://user-images.githubusercontent.com/6711748/200165901-834eda84-a7a1-4be6-b0c3-661158e466ed.png)
 * 분산 시스템
+
+## 구현 아키텍처 
+![image](./1.drawio.png)
