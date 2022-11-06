@@ -17,8 +17,7 @@
 * 다른 비즈니스에서 재활용 가능하다.
 
 ## 분산 추적
-![image](https://user-images.githubusercontent.com/6711748/200165901-834eda84-a7a1-4be6-b0c3-661158e466ed.png)
-* 분산 시스템
+![image](https://user-images.githubusercontent.com/6711748/200171989-61a8cca8-b17f-4549-8674-01bd27189c3a.png)
 
 ## 구현 아키텍처 
 ![image](./1.drawio.png)
