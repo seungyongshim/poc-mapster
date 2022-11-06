@@ -1,7 +1,10 @@
+using Boost.Proto.Actor.DependencyInjection;
 using FluentEmail.Core;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Mapster;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
 using Proto;
@@ -12,7 +15,15 @@ namespace Ports.Smtp.Actors;
 public class SmtpPortActor : IActor
 {
     static SmtpPortActor() => TypeAdapterConfig<Email, MailboxAddress>.NewConfig()
-            .ConstructUsing(src => new MailboxAddress(src.Name.Value, src.Address.Value));
+            .MapWith(src => new MailboxAddress(src.Name.Value, src.Address.Value))
+            .Compile();
+
+    public SmtpPortActor(IOptions<SmtpOptions> smtpOptions)
+    {
+        SmtpOption = smtpOptions.Value.Smtp;
+    }
+
+    public SmtpOption SmtpOption { get; }
 
     public Task ReceiveAsync(IContext context) => context.Message switch
     {
@@ -27,7 +38,7 @@ public class SmtpPortActor : IActor
             emailMessage.Body = new TextPart(TextFormat.Html) { Text = "Test" };
 
             using var client = new SmtpClient();
-            await client.ConnectAsync("localhost", 1025, SecureSocketOptions.Auto).ConfigureAwait(false);
+            await client.ConnectAsync(SmtpOption.Host, SmtpOption.Port, SecureSocketOptions.Auto).ConfigureAwait(false);
             await client.SendAsync(emailMessage).ConfigureAwait(false);
             await client.DisconnectAsync(true).ConfigureAwait(false);
         }),

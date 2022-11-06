@@ -1,3 +1,4 @@
+using AutoMapper;
 using Mapster;
 using MimeKit;
 using SendMailService.Domain;
@@ -8,18 +9,24 @@ public class UnitTest1
 {
     static UnitTest1()
     {
-        var ctor = typeof(MailboxAddress).GetConstructor(new[] { typeof(string), typeof(string) });
         TypeAdapterConfig<Email, MailboxAddress>.NewConfig()
-            .ConstructUsing(src => new MailboxAddress(src.Name.Value, src.Address.Value))
-            .MapToConstructor(ctor);
+            .MapWith(src => new MailboxAddress(src.Name.Value, src.Address.Value))
+            .Compile();
+
+            //.ConstructUsing(src => new MailboxAddress(src.Name.Value, src.Address.Value))
+            //.BuildAdapter();
+            
     }
 
     [Fact]
     public void Test1()
     {
-        
+
         var sut = new Email(new("Hong"), new("hong@hong.com"));
-        var ret = sut.Adapt<MailboxAddress>();
+        var ret = sut.Adapt<Email, MailboxAddress>();
+
+        Assert.Equal(ret.Name, "Hong");
+        Assert.Equal(ret.Address, "hong@hong.com");
     }
 
     [Fact]
@@ -27,5 +34,20 @@ public class UnitTest1
     {
         var sut = new Email(new("Hong"), new("hong@hong.com"));
         var ret = new MailboxAddress(sut.Name.Value, sut.Address.Value);
+    }
+
+
+    [Fact]
+    public void Test3()
+    {
+        var config = new MapperConfiguration(config =>
+        {
+            config.AddSmtpMapper();
+        });
+
+        var mapper = config.CreateMapper();
+
+        var sut = new Email(new("Hong"), new("hong@hong.com"));
+        var ret = mapper.Map<Email, MailboxAddress>(sut);
     }
 }
