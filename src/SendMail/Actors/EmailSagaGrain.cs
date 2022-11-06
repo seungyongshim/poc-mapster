@@ -1,6 +1,7 @@
 using Mapster;
 using Ports.Smtp.Actors;
 using Proto;
+using Proto.Cluster;
 using SendMailService.Domain;
 
 namespace SendMailService.Actors;
@@ -11,8 +12,11 @@ public class EmailSagaGrain : IActor
     {
         SendMail msg => Task.Run(async () =>
         {
-            var ret = await context.RequestAsync<SmtpPortActor.SendMailResult>(ActorPath.SmtpPortActorPid, msg.Adapt<SmtpPortActor.SendMail>());
-            context.Respond(ret.Adapt<SendMailResult>());
+            var ret = await context.RequestAsync<SmtpPortActor.SendMailResult>(ActorPath.SmtpPortActorPid, msg.Adapt<SmtpPortActor.SendMail>() with
+            {
+                Cid = context.ClusterIdentity().Identity
+            });
+            context.Respond(new SendMailResult());
         }),
         _ => Task.CompletedTask
     };

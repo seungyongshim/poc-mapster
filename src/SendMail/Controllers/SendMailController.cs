@@ -1,10 +1,13 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit;
 using Proto.Cluster;
 using SendMailService.Actors;
 using SendMailService.Domain;
 using static SendMailService.Actors.EmailSagaGrain;
+using static SendMailService.Controllers.SendMailController.Dto;
 
 namespace SendMailService.Controllers;
 
@@ -14,11 +17,17 @@ namespace SendMailService.Controllers;
 [Route("[controller]")]
 public class SendMailController : ControllerBase
 {
+    static SendMailController()
+    {
+        TypeAdapterConfig<EmailContext, Email>.NewConfig()
+            .MapWith(src => new Email(new(src.Name), new(src.Address)));
+    }
+
     [HttpPost]
     public async Task<IActionResult> PostAsync([FromBody] Dto dto, [FromServices] Cluster cluster, CancellationToken ct)
     {
         var cid = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-        var ret = await cluster.RequestAsync<SendMailResult>(ActorPath.EmailSagaGrain(cid), dto.ToSendMail(), ct);
+        var ret = await cluster.RequestAsync<SendMailResult>(ActorPath.EmailSagaGrain(cid), dto.Adapt<SendMail>(), ct);
 
         return Ok(ret);
     }

@@ -34,25 +34,28 @@ public class SmtpPortActor : IActor
             emailMessage.From.Add(msg.From.Adapt<MailboxAddress>());
             var to = msg.To.Adapt<IEnumerable<MailboxAddress>>();
             emailMessage.To.AddRange(to);
-            emailMessage.Subject = "Test";
+            emailMessage.Subject = msg.Cid;
             emailMessage.Body = new TextPart(TextFormat.Html) { Text = "Test" };
 
             using var client = new SmtpClient();
             await client.ConnectAsync(SmtpOption.Host, SmtpOption.Port, SecureSocketOptions.Auto).ConfigureAwait(false);
             await client.SendAsync(emailMessage).ConfigureAwait(false);
             await client.DisconnectAsync(true).ConfigureAwait(false);
+
+            context.Respond(new SendMailResult());
         }),
         _ => Task.CompletedTask,
     };
 
     public record SendMail
     (
-       IEnumerable<Email> To,
-       Email From,
-       IEnumerable<Email> Cc,
-       IEnumerable<Email> Bcc
+        IEnumerable<Email> To,
+        Email From,
+        IEnumerable<Email> Cc,
+        IEnumerable<Email> Bcc,
+        string Cid = ""
     );
-
+    
     public record SendMailResult
     (
     );
