@@ -1,5 +1,6 @@
 using Boost.Proto.Actor.DependencyInjection;
 using Boost.Proto.Actor.Hosting.Cluster;
+using Ports.Smtp;
 using Ports.Smtp.Actors;
 using Proto.Router;
 using SendMailService;
@@ -20,15 +21,17 @@ builder.Host.UseProtoActorCluster((option, sp) =>
 
     option.FuncActorSystemStart = root =>
     {
-        root.SpawnNamed(root.NewRoundRobinPool(sp.GetRequiredService<IPropsFactory<SmtpPortActor>>().Create(), 10), nameof(SmtpPortActor));
+        var pid = root.SpawnNamed(root.NewRoundRobinPool(sp.GetRequiredService<IPropsFactory<SmtpPortActor>>().Create(), 10), nameof(SmtpPortActor));
 
         return root;
     };
 });
+builder.Host.UseSmtp();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 var app = builder.Build();
 

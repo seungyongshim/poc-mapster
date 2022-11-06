@@ -29,9 +29,9 @@ public class SendMailController : ControllerBase
         public IEnumerable<EmailContext> Cc { get; init; } = Enumerable.Empty<EmailContext>();
         public IEnumerable<EmailContext> Bcc { get; init; } = Enumerable.Empty<EmailContext>();
 
-        public readonly record struct EmailContext(string Name, string EmailAddress)
+        public readonly record struct EmailContext(string Name, string Address)
         {
-            public Email ToEmail() => new(new(Name), new(EmailAddress));
+            public Email ToEmail() => new(new(Name), new(Address));
         };
 
         public SendMail ToSendMail() => new

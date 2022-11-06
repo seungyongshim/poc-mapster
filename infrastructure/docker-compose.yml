@@ -1,11 +1,8 @@
 version: '2.1'
 
 services:
-  hello:
-    image: hello-world
-
   maildev:
     image: maildev/maildev
     ports:
-      - 1080
-      - 1025
+      - 1080:1080
+      - 1025:1025
