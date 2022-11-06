@@ -1,6 +1,8 @@
 using Boost.Proto.Actor.DependencyInjection;
 using Boost.Proto.Actor.Hosting.Cluster;
+using Boost.Proto.Actor.Hosting.OpenTelemetry;
 using Microsoft.Extensions.Options;
+using OpenTelemetry.Trace;
 using Ports.Smtp;
 using Ports.Smtp.Actors;
 using Proto.Router;
@@ -27,6 +29,7 @@ builder.Host.UseProtoActorCluster((option, sp) =>
         return root;
     };
 });
+
 builder.Host.UseSmtp((option, sp) =>
 {
     option.Smtp = option.Smtp with
@@ -35,14 +38,20 @@ builder.Host.UseSmtp((option, sp) =>
     };
 });
 
+builder.Host.UseProtoActorOpenTelemetry();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddOpenTelemetryTracing(trace =>
+{
+    trace.AddSource("Proto.Actor")
+         .AddJaegerExporter()
+         .AddAspNetCoreInstrumentation();
+});
 
 
 var app = builder.Build();
-
-var option = app.Services.GetRequiredService<IOptions<SmtpOptions>>().Value;
 
 if (app.Environment.IsDevelopment())
 {
