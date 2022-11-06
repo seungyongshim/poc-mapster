@@ -1,23 +1,16 @@
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Domains;
-using static WebApplication1.Controllers.SendMailController;
-using ext = WebApplication1.Controllers.SendMailControllerExtensions;
 
 namespace WebApplication1.Controllers;
 
-public record SendMailActorRequest
+public record RequestSendMailActor
 (
     IEnumerable<Email> To,
     Email From,
     IEnumerable<Email> Cc,
     IEnumerable<Email> Bcc
 );
-
-public static class SendMailControllerExtensions
-{
-    public static Email ToEmail(this Dto.EmailContext x) => new(new(x.Name), new(x.EmailAddress));
-}
 
 [ApiController]
 [Route("[controller]")]
@@ -28,19 +21,17 @@ public class SendMailController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> PostAsync(Dto dto)
     {
-        SendMailActorRequest target = new
-        (
-            To: dto.To.Select(ext.ToEmail),
-            From : dto.From.ToEmail(),
-            Cc: dto.Cc.Select(ext.ToEmail),
-            Bcc: dto.Bcc.Select(ext.ToEmail)
-        );
-
+        var target = dto.ToRequestSendMailActor();
         await Task.CompletedTask;
-        return Ok(target);
+        return Ok(new
+        {
+            To = target.To.Select(x => new
+            {
+                Name = x.Name.Value,
+                Address = x.EmailAddress.Value
+            })
+        });
     }
-
-    
 
     public record Dto
     {
@@ -49,6 +40,17 @@ public class SendMailController : ControllerBase
         public IEnumerable<EmailContext> Cc { get; init; } = Enumerable.Empty<EmailContext>();
         public IEnumerable<EmailContext> Bcc { get; init; } = Enumerable.Empty<EmailContext>();
 
-        public readonly record struct EmailContext(string Name, string EmailAddress);
+        public readonly record struct EmailContext(string Name, string EmailAddress)
+        {
+            public Email ToEmail() => new(new(Name), new(EmailAddress));
+        };
+
+        public RequestSendMailActor ToRequestSendMailActor() => new
+        (
+            To.Select(_ => _.ToEmail()),
+            From.ToEmail(),
+            Cc.Select(_ => _.ToEmail()),
+            Bcc.Select(_ => _.ToEmail())
+        );
     }
 }
