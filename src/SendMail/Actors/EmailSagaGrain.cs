@@ -1,7 +1,7 @@
 using Mapster;
 using Ports.Smtp.Actors;
 using Proto;
-using WebApplication1.Domains;
+using SendMailService.Domain;
 
 namespace SendMailService.Actors;
 

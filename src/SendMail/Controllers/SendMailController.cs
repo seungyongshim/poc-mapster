@@ -1,8 +1,9 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Proto.Cluster;
 using SendMailService.Actors;
-using WebApplication1.Domains;
+using SendMailService.Domain;
 using static SendMailService.Actors.EmailSagaGrain;
 
 namespace SendMailService.Controllers;
@@ -29,7 +30,14 @@ public class SendMailController : ControllerBase
         public IEnumerable<EmailContext> Cc { get; init; } = Enumerable.Empty<EmailContext>();
         public IEnumerable<EmailContext> Bcc { get; init; } = Enumerable.Empty<EmailContext>();
 
-        public readonly record struct EmailContext(string Name, string Address)
+
+        public readonly record struct EmailContext
+        (
+            [property: DefaultValue("Hong")]
+            string Name,
+            [property: DefaultValue("Hong@Hong.com")]
+            string Address
+        )
         {
             public Email ToEmail() => new(new(Name), new(Address));
         };

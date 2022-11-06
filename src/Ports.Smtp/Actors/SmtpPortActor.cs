@@ -5,14 +5,14 @@ using Mapster;
 using MimeKit;
 using MimeKit.Text;
 using Proto;
-using Email = WebApplication1.Domains.Email;
+using Email = SendMailService.Domain.Email;
 
 namespace Ports.Smtp.Actors;
 
 public class SmtpPortActor : IActor
 {
     static SmtpPortActor() => TypeAdapterConfig<Email, MailboxAddress>.NewConfig()
-            .MapToConstructor(typeof(MailboxAddress).GetConstructor(new[] { typeof(string), typeof(string) }));
+            .ConstructUsing(src => new MailboxAddress(src.Name.Value, src.Address.Value));
 
     public Task ReceiveAsync(IContext context) => context.Message switch
     {
@@ -20,8 +20,9 @@ public class SmtpPortActor : IActor
         {
             var emailMessage = new MimeMessage();
 
-            emailMessage.From.Add(new MailboxAddress(msg.From.Name.Value, msg.From.Address.Value));
-            emailMessage.To.AddRange(msg.To.Adapt<IEnumerable<MailboxAddress>>());
+            emailMessage.From.Add(msg.From.Adapt<MailboxAddress>());
+            var to = msg.To.Adapt<IEnumerable<MailboxAddress>>();
+            emailMessage.To.AddRange(to);
             emailMessage.Subject = "Test";
             emailMessage.Body = new TextPart(TextFormat.Html) { Text = "Test" };
 

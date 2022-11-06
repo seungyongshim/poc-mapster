@@ -7,6 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mapster" Version="7.4.0-pre03" />
+    <PackageReference Include="Mapster" Version="7.3.0" />
   </ItemGroup>
 </Project>

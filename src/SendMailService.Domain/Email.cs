@@ -1,3 +1,3 @@
-﻿namespace WebApplication1.Domains;
+namespace SendMailService.Domain;
 
 public record Email(EmailName Name, EmailAddress Address);
